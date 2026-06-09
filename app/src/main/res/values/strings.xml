@@ -1,0 +1,146 @@
+<resources>
+
+    <string name="app_name">GasPriceFinder</string>
+
+    <!-- BOTTOM NAV -->
+    <string name="gasolineras">Gasolineras</string>
+    <string name="favoritas">Favoritas</string>
+    <string name="ajustes">Ajustes</string>
+
+
+    <!-- DETAIL SCREEN -->
+    <string name="cerrar">Cerrar</string>
+    <string name="como_llegar">Cómo llegar</string>
+    <string name="historico">Histórico</string>
+    <string name="favorito">Favorito</string>
+    <string name="llenar_deposito">LLENAR DEPÓSITO</string>
+    <string name="respecto_a_media">RESPECTO A MEDIA</string>
+    <string name="llegar_cuesta">LLEGAR CUESTA</string>
+    <string name="ver_todos">Ver todos</string>
+    <string name="ultima_comprobacion_de_precios">Última comprobación de precios</string>
+    <string name="esta_gasolinera_cambio_los_precios">Esta gasolinera cambió los precios</string>
+    <string name="horario_y_ubicacion">Horario y ubicación</string>
+    <string name="abierto">Abierto</string>
+    <string name="cerrado">Cerrado</string>
+    <string name="horario_no_disponible">Horario no disponible</string>
+    <string name="los_horarios_pueden_variar_en_dias_festivos">* Los horarios pueden variar en días festivos.</string>
+    <string name="abrir_en_mapas">Abrir en mapas</string>
+    <string name="disclaimer">Los cálculos de distancias son en línea recta. Los datos mostrados son obtenidos del Ministerio de Transporte y Consumo.</string>
+    <string name="sin_datos_recientes_de_la_estacion">Sin datos recientes de la estación</string>
+    <string name="sincronizar">Sincronizar</string>
+    <string name="hace_un_momento">Hace un momento</string>
+    <string name="hace_min">Hace %1$d min</string>
+    <string name="hace_h">Hace %1$d h</string>
+    <string name="hace_1_d">Hace 1 d</string>
+    <string name="hace_d">Hace %1$d días</string>
+
+
+    <!-- FAVORITES SCREEN -->
+    <string name="no_hay_estaciones_favoritas_por_el_momento">No hay estaciones favoritas por el momento</string>
+
+    <!-- LIST SCREEN -->
+    <string name="gasolineras_cercanas">Gasolineras cercanas</string>
+
+    <!-- MAP SCREEN -->
+    <string name="buscar_en_esta_zona">Buscar en esta zona</string>
+    <string name="filtros">Filtros</string>
+    <string name="abiertas_ahora">Abiertas ahora</string>
+    <string name="mi_tipo_de_combustible">Mi tipo de combustible</string>
+    <string name="solo_mis_favoritas">Sólo mis favoritas</string>
+    <string name="borrar_filtros">Borrar filtros</string>
+    <string name="guardar_filtros">Guardar filtros</string>
+    <string name="por_precio">Por precio</string>
+    <string name="por_distancia">Por distancia</string>
+    <string name="euros_dep">" €/dep"</string>
+
+    <!-- PRICE HISTORY SCREEN -->
+    <string name="historico_de_precios">Histórico de precios</string>
+    <string name="precio_minimo">PRECIO MÍNIMO</string>
+    <string name="precio_maximo">PRECIO MÁXIMO</string>
+    <string name="sin_datos_grafico">No hay datos suficientes para mostrar el gráfico</string>
+
+    <!-- SETTINGS FUEL SCREEN -->
+    <string name="tipo_de_combustible">Tipo de combustible</string>
+    <string name="atras">Atrás</string>
+    <string name="mas_comunes">Más comunes</string>
+    <string name="otros">Otros</string>
+    <string name="adblue" translatable="false">AdBlue</string>
+    <string name="dialog_adblue">¿Tu vehículo utiliza AdBlue? Se añadirá la configuración del depósito de AdBlue más abajo.</string>
+    <string name="si">Sí</string>
+    <string name="no">No</string>
+
+    <!-- SETTINGS SCREEN -->
+    <string name="usuarios">Usuarios</string>
+    <string name="anadir_usuario">Añadir usuario</string>
+    <string name="configuracion">Configuración</string>
+    <string name="radio_de_busqueda_km">Radio de búsqueda: %1$d km</string>
+    <string name="actualizando">Actualizando...</string>
+    <string name="limpiar_cache">Limpiar caché</string>
+    <string name="exportar_logs">Exportar logs</string>
+    <string name="dialog_export_logs">Selecciona qué logs quieres exportar a la carpeta Descargas.</string>
+    <string name="todos">Todos</string>
+    <string name="solo_hoy">Sólo hoy</string>
+    <string name="permiso_export_logs">Sin permiso no se pueden exportar los logs</string>
+    <string name="tema">Tema</string>
+
+    <!-- SETTINGS USER SCREEN -->
+    <string name="nuevo_usuario">Nuevo usuario</string>
+    <string name="configuracion_de_usuario">Configuración de usuario</string>
+    <string name="cancelar">Cancelar</string>
+    <string name="nombre_del_usuario">Nombre del usuario</string>
+    <string name="tu_nombre">Tu nombre</string>
+    <string name="seleccionar">Seleccionar</string>
+    <string name="seleccionar_combustible">Seleccionar combustible</string>
+    <string name="capacidad_de_deposito">Capacidad de depósito</string>
+    <string name="litros">%1$d Litros</string>
+    <string name="consumo_de_carburante">Consumo de carburante</string>
+    <string name="activalo_si_tu_vehiculo_utiliza_adblue">Actívalo si tu vehículo utiliza AdBlue</string>
+    <string name="capacidad_del_deposito_de_adblue">Capacidad del depósito de AdBlue</string>
+    <string name="litros_adblue">%1$d Litros</string>
+    <string name="guardar">Guardar</string>
+    <string name="eliminar_usuario">Eliminar usuario</string>
+    <string name="crear_usuario">Crear usuario</string>
+    <string name="dialog_eliminar_user">¿Estás seguro de que quieres eliminar este usuario? Esta acción no se puede deshacer.</string>
+    <string name="eliminar">Eliminar</string>
+
+    <!-- SPLASH SCREEN -->
+    <string name="bienvenido_a_gas_price_finder">Bienvenido a Gas Price Finder</string>
+    <string name="configura_tu_perfil_para_comenzar">Configura tu perfil para comenzar</string>
+    <string name="puedes_elegir_tu_combustible_preferido_mas_tarde_en_ajustes">Puedes elegir tu combustible preferido mas tarde en Ajustes</string>
+    <string name="radio_de_busqueda">Radio de búsqueda</string>
+    <string name="consumo_medio">Consumo medio</string>
+    <string name="capacidad_del_deposito">Capacidad del depósito</string>
+    <string name="tema_de_la_app">Tema de la app</string>
+    <string name="creando_perfil">Creando perfil...</string>
+    <string name="comenzar">Comenzar</string>
+
+    <!-- HORARIO PARSER -->
+    <string name="day_monday">Lunes</string>
+    <string name="day_tuesday">Martes</string>
+    <string name="day_wednesday">Miércoles</string>
+    <string name="day_thursday">Jueves</string>
+    <string name="day_friday">Viernes</string>
+    <string name="day_saturday">Sábado</string>
+    <string name="day_sunday">Domingo</string>
+    <string name="horario_24h" translatable="false">24h</string>
+
+    <!-- PRODUCTOS -->
+    <string name="fuel_gasolina_95_e5">Gasolina 95 E5</string>
+    <string name="fuel_gasolina_98_e5">Gasolina 98 E5</string>
+    <string name="fuel_gasoleo_a">Gasóleo A</string>
+    <string name="fuel_gasoleo_premium">Gasóleo Premium</string>
+    <string name="fuel_gasoleo_b">Gasóleo B</string>
+    <string name="fuel_biodiesel">Biodiesel</string>
+    <string name="fuel_bioetanol">Bioetanol</string>
+    <string name="fuel_glp">Gases licuados del petróleo</string>
+    <string name="fuel_gnc">Gas Natural Comprimido</string>
+    <string name="fuel_gnl">Gas Natural Licuado</string>
+    <string name="fuel_gasolina_98_e5_premium">Gasolina 98 E5 Premium</string>
+    <string name="fuel_gasolina_98_e10">Gasolina 98 E10</string>
+    <string name="fuel_hidrogeno">Hidrógeno</string>
+    <string name="fuel_gasolina_95_e10">Gasolina 95 E10</string>
+    <string name="fuel_gasolina_95_e5_premium">Gasolina 95 E5 Premium</string>
+    <string name="fuel_adblue" translatable="false">AdBlue</string>
+    <string name="fuel_sin_definir">Sin definir</string>
+
+</resources>

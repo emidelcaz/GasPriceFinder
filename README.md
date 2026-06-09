@@ -35,7 +35,7 @@ El resultado es una aplicación modular, testeable y preparada para escalar sin 
 ### Requisitos
 - Android Studio Ladybug o superior.
 - SDK de Android 26 (Android 8.0) como mínimo.
-- Una API key de Google Maps (se configura en `local.properties`).
+- Una API key de Google Maps (se configura en `AndroidManifest.xml`).
 
 ### Configuración
 1. Clona el repositorio.

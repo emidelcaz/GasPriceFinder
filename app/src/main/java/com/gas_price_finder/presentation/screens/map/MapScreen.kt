@@ -251,6 +251,26 @@ fun MapScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalAlignment = Alignment.End
         ) {
+            // Modo en ruta
+            FloatingActionButton(
+                onClick = { viewModel.toggleRouteMode() },
+                containerColor = if (uiState.isRouteModeActive) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.surface
+                }
+            ) {
+                Icon(
+                    Icons.Default.Directions,
+                    contentDescription = "Modo en ruta",
+                    tint = if (uiState.isRouteModeActive) {
+                        MaterialTheme.colorScheme.onPrimary
+                    } else {
+                        MaterialTheme.colorScheme.onSurface
+                    }
+                )
+            }
+
             // Layers / map type
             SmallFloatingActionButton(
                 onClick = { viewModel.toggleMapType() },
@@ -374,6 +394,51 @@ fun MapScreen(
                 onDismiss = { viewModel.deselectStation() }
             )
         }
+    }
+
+    // Diálogo: distancia para repostar en ruta
+    if (uiState.showRouteDistanceDialog) {
+        RouteDistanceDialog(
+            initialKm = uiState.routeDistanceKm,
+            onDismiss = { viewModel.dismissRouteDialogs() },
+            onConfirm = { km -> viewModel.onRouteDistanceSelected(km) }
+        )
+    }
+
+    // Diálogo: ¿repostar AdBlue también?
+    if (uiState.showRouteAdBlueDialog) {
+        RouteAdBlueDialog(
+            onDismiss = { viewModel.dismissRouteDialogs() },
+            onConfirm = { requiresAdBlue ->
+                viewModel.onRouteAdBlueConfirmed(requiresAdBlue)
+            }
+        )
+    }
+
+    // Diálogo: resultados del modo en ruta
+    if (uiState.showRouteResultsDialog) {
+        RouteResultsDialog(
+            routeCalculations = uiState.routeCalculations,
+            onDismiss = { viewModel.dismissRouteResultsDialog() },
+            onStationClick = { stationId ->
+                viewModel.dismissRouteResultsDialog()
+                onNavigateToDetail(stationId)
+            }
+        )
+    }
+
+    // Diálogo: errores del modo en ruta
+    uiState.routeError?.let { error ->
+        AlertDialog(
+            onDismissRequest = { viewModel.clearRouteError() },
+            confirmButton = {
+                TextButton(onClick = { viewModel.clearRouteError() }) {
+                    Text("Aceptar")
+                }
+            },
+            title = { Text("Modo en ruta") },
+            text = { Text(error) }
+        )
     }
 }
 

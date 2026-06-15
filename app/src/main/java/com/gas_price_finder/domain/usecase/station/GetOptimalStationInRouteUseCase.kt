@@ -16,10 +16,11 @@ class GetOptimalStationInRouteUseCase @Inject constructor(
         origenLat: Double,
         origenLon: Double,
         heading: Float,
-        autonomiaKm: Double
-    ): RouteCalculation? {
-        val user = userRepository.getActiveUserSync() ?: return null
-        val productoId = user.combustiblePreferidoId ?: return null
+        autonomiaKm: Double,
+        requiereAdBlue: Boolean
+    ): List<RouteCalculation> {
+        val user = userRepository.getActiveUserSync() ?: return emptyList()
+        val productoId = user.combustiblePreferidoId ?: return emptyList()
 
         val sector = calculateSector(origenLat, origenLon, heading, autonomiaKm)
         val estaciones = stationRepository.getStationsInBoundingBox(
@@ -36,46 +37,42 @@ class GetOptimalStationInRouteUseCase @Inject constructor(
                         origenLon,
                         station.latitud,
                         station.longitud
-                    ) <= autonomiaKm
+                    ) <= autonomiaKm &&
+                    (!requiereAdBlue || station.getPrecio(26) != null)
         }
 
-        val optima = estacionesFiltradas.minByOrNull {
-            it.getPrecio(productoId)?.precio ?: Double.MAX_VALUE
-        } ?: return null
-
-        val distancia = GeoUtils.haversine(origenLat, origenLon, optima.latitud, optima.longitud)
-        val precio = optima.getPrecio(productoId)?.precio ?: return null
-
-        val litros = (distancia / 100) * user.consumoMedioL100
-        val costeCombustible = litros * precio
-
-        val costeAdBlue = if (user.usaAdBlue) {
-            val proporcion = user.capacidadAdBlueL / user.capacidadDepositoL
-            litros * proporcion * (optima.getPrecio(26)?.precio ?: 0.0)
-        } else 0.0
-
-        // CÁLCULO AHORRO VS MEDIA DEL ÁREA
+        // CÁLCULO MEDIA DEL ÁREA (usado para el ahorro de cada estación)
         val preciosEnSector = estacionesFiltradas.mapNotNull {
             it.getPrecio(productoId)?.precio
         }
-        val mediaArea = if (preciosEnSector.isNotEmpty()) {
-            preciosEnSector.average()
-        } else {
-            precio
-        }
-        val ahorroPorLitro = mediaArea - precio
-        val ahorroVsMedia = ahorroPorLitro * user.capacidadDepositoL
+        val mediaArea = if (preciosEnSector.isNotEmpty()) preciosEnSector.average() else 0.0
 
-        return RouteCalculation(
-            estacionOptima = optima,
-            distanciaDesvioKm = distancia,
-            costeTotal = costeCombustible + costeAdBlue,
-            costeCombustible = costeCombustible,
-            costeAdBlue = costeAdBlue,
-            costeDesvio = 0.0,
-            ahorroVsMedia = ahorroVsMedia,
-            autonomiaKm = autonomiaKm
-        )
+        return estacionesFiltradas.mapNotNull { station ->
+            val distancia = GeoUtils.haversine(origenLat, origenLon, station.latitud, station.longitud)
+            val precio = station.getPrecio(productoId)?.precio ?: return@mapNotNull null
+
+            val litros = (distancia / 100) * user.consumoMedioL100
+            val costeCombustible = litros * precio
+
+            val costeAdBlue = if (requiereAdBlue) {
+                val proporcion = user.capacidadAdBlueL / user.capacidadDepositoL
+                litros * proporcion * (station.getPrecio(26)?.precio ?: 0.0)
+            } else 0.0
+
+            val ahorroPorLitro = mediaArea - precio
+            val ahorroVsMedia = ahorroPorLitro * user.capacidadDepositoL
+
+            RouteCalculation(
+                estacionOptima = station,
+                distanciaDesvioKm = distancia,
+                costeTotal = costeCombustible + costeAdBlue,
+                costeCombustible = costeCombustible,
+                costeAdBlue = costeAdBlue,
+                costeDesvio = 0.0,
+                ahorroVsMedia = ahorroVsMedia,
+                autonomiaKm = autonomiaKm
+            )
+        }.sortedBy { it.costeTotal }
     }
 
     private fun calculateSector(
@@ -98,4 +95,4 @@ class GetOptimalStationInRouteUseCase @Inject constructor(
         while (result < -180) result += 360
         return result
     }
-}
+}

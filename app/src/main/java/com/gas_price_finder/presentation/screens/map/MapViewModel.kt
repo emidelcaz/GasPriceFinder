@@ -10,13 +10,18 @@ import com.gas_price_finder.R
 import com.gas_price_finder.domain.model.Station
 import com.gas_price_finder.domain.usecase.favorite.GetFavoritesUseCase
 import com.gas_price_finder.domain.usecase.station.GetNearbyStationsUseCase
+import com.gas_price_finder.domain.usecase.station.GetOptimalStationInRouteUseCase
 import com.gas_price_finder.domain.usecase.station.GetStationsInZoneUseCase
 import com.gas_price_finder.domain.usecase.sync.SyncStationsUseCase
 import com.gas_price_finder.domain.usecase.user.GetActiveUserUseCase
 import com.gas_price_finder.util.GeoUtils
 import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
+import android.os.Looper
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.MapType
@@ -32,6 +37,7 @@ private const val TAG = "MapViewModel"
 class MapViewModel @Inject constructor(
     private val getNearbyStationsUseCase: GetNearbyStationsUseCase,
     private val getStationsInZoneUseCase: GetStationsInZoneUseCase,
+    private val getOptimalStationInRouteUseCase: GetOptimalStationInRouteUseCase,
     private val getActiveUserUseCase: GetActiveUserUseCase,
     private val getFavoritesUseCase: GetFavoritesUseCase,
     private val syncStationsUseCase: SyncStationsUseCase,
@@ -42,6 +48,9 @@ class MapViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(MapState())
     val uiState: StateFlow<MapState> = _uiState.asStateFlow()
+
+    private var _lastBearing: Float? = null
+    private var _locationCallback: LocationCallback? = null
 
     init {
 
@@ -122,6 +131,50 @@ class MapViewModel @Inject constructor(
         } catch (e: Exception) {
             logger.e(TAG, "Error inesperado al obtener ubicación actual", e)
             updateLocationAndLoadStations(LatLng(40.4168, -3.7038))
+        }
+    }
+
+    @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
+    private fun startLocationUpdates() {
+        try {
+            stopLocationUpdates()
+
+            val request = LocationRequest.Builder(
+                Priority.PRIORITY_HIGH_ACCURACY,
+                1000L
+            ).apply {
+                setMinUpdateIntervalMillis(500L)
+                setWaitForAccurateLocation(false)
+            }.build()
+
+            val callback = object : LocationCallback() {
+                override fun onLocationResult(result: LocationResult) {
+                    result.lastLocation?.let { location ->
+                        _uiState.update { it.copy(userLocation = LatLng(location.latitude, location.longitude)) }
+                        if (location.hasBearing()) {
+                            _lastBearing = location.bearing
+                        }
+                    }
+                }
+            }
+
+            _locationCallback = callback
+            fusedLocationClient.requestLocationUpdates(
+                request,
+                callback,
+                Looper.getMainLooper()
+            )
+        } catch (e: SecurityException) {
+            logger.w(TAG, "Permiso de ubicación no concedido", e)
+        } catch (e: Exception) {
+            logger.e(TAG, "Error al iniciar actualizaciones de ubicación", e)
+        }
+    }
+
+    private fun stopLocationUpdates() {
+        _locationCallback?.let { callback ->
+            fusedLocationClient.removeLocationUpdates(callback)
+            _locationCallback = null
         }
     }
 
@@ -356,6 +409,157 @@ class MapViewModel @Inject constructor(
             days == 1 -> "Cambió hace 1d"
             else -> "Cambió hace $days d"
         }
+    }
+
+    // ============================================================
+    // MODO EN RUTA
+    // ============================================================
+
+    fun toggleRouteMode() {
+        val currentlyActive = _uiState.value.isRouteModeActive
+        if (currentlyActive) {
+            stopLocationUpdates()
+            _lastBearing = null
+            _uiState.update {
+                it.copy(
+                    isRouteModeActive = false,
+                    showRouteDistanceDialog = false,
+                    showRouteAdBlueDialog = false,
+                    showRouteResultsDialog = false,
+                    routeCalculations = emptyList(),
+                    routeError = null
+                )
+            }
+        } else {
+            val user = _uiState.value.activeUser
+            when {
+                user == null -> {
+                    _uiState.update { it.copy(routeError = "Debes configurar un usuario activo para usar el modo en ruta.") }
+                }
+                user.combustiblePreferidoId == null -> {
+                    _uiState.update { it.copy(routeError = "Debes seleccionar un combustible preferido en ajustes.") }
+                }
+                _uiState.value.userLocation == null -> {
+                    _uiState.update { it.copy(routeError = "No se ha podido obtener tu ubicación actual.") }
+                }
+                else -> {
+                    _lastBearing = null
+                    if (_uiState.value.locationPermissionGranted) {
+                        startLocationUpdates()
+                    }
+                    _uiState.update {
+                        it.copy(
+                            isRouteModeActive = true,
+                            showRouteDistanceDialog = true,
+                            routeDistanceKm = 20,
+                            routeError = null
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    fun onRouteDistanceSelected(km: Int) {
+        val user = _uiState.value.activeUser
+        _uiState.update { it.copy(routeDistanceKm = km, showRouteDistanceDialog = false) }
+
+        if (user?.usaAdBlue == true) {
+            _uiState.update { it.copy(showRouteAdBlueDialog = true) }
+        } else {
+            calculateRoute(requiresAdBlue = false)
+        }
+    }
+
+    fun onRouteAdBlueConfirmed(requiresAdBlue: Boolean) {
+        _uiState.update { it.copy(showRouteAdBlueDialog = false) }
+        calculateRoute(requiresAdBlue = requiresAdBlue)
+    }
+
+    private fun calculateRoute(requiresAdBlue: Boolean) {
+        val location = _uiState.value.userLocation ?: return
+        val heading = _lastBearing ?: run {
+            stopLocationUpdates()
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    routeError = "No se ha detectado la dirección de movimiento. Desplázate unos metros e inténtalo de nuevo.",
+                    isRouteModeActive = false
+                )
+            }
+            return
+        }
+
+        _uiState.update { it.copy(isLoading = true, routeError = null) }
+
+        viewModelScope.launch {
+            try {
+                val resultados = getOptimalStationInRouteUseCase(
+                    origenLat = location.latitude,
+                    origenLon = location.longitude,
+                    heading = heading,
+                    autonomiaKm = _uiState.value.routeDistanceKm.toDouble(),
+                    requiereAdBlue = requiresAdBlue
+                )
+
+                stopLocationUpdates()
+
+                if (resultados.isEmpty()) {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            routeError = "No se han encontrado estaciones en la ruta seleccionada.",
+                            isRouteModeActive = false
+                        )
+                    }
+                } else {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            routeCalculations = resultados,
+                            showRouteResultsDialog = true
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                logger.e(TAG, "Error al calcular ruta", e)
+                stopLocationUpdates()
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        routeError = "Error al calcular la ruta: ${e.localizedMessage}",
+                        isRouteModeActive = false
+                    )
+                }
+            }
+        }
+    }
+
+    fun dismissRouteDialogs() {
+        _uiState.update {
+            it.copy(
+                showRouteDistanceDialog = false,
+                showRouteAdBlueDialog = false
+            )
+        }
+    }
+
+    fun dismissRouteResultsDialog() {
+        _uiState.update {
+            it.copy(
+                showRouteResultsDialog = false,
+                routeCalculations = emptyList()
+            )
+        }
+    }
+
+    fun clearRouteError() {
+        _uiState.update { it.copy(routeError = null) }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        stopLocationUpdates()
     }
 }
 

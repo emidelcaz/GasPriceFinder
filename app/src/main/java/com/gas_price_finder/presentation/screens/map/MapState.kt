@@ -1,5 +1,6 @@
 package com.gas_price_finder.presentation.screens.map
 
+import com.gas_price_finder.domain.model.RouteCalculation
 import com.gas_price_finder.domain.model.Station
 import com.gas_price_finder.domain.model.User
 import com.google.android.gms.maps.model.CameraPosition
@@ -24,7 +25,16 @@ data class MapState(
     val stationDistances: Map<String, Double> = emptyMap(),
     val favoriteStationIds: Set<String> = emptySet(),
     val activeUser: User? = null,
-    val savedCameraPosition: CameraPosition? = null
+    val savedCameraPosition: CameraPosition? = null,
+
+    // Modo en ruta
+    val isRouteModeActive: Boolean = false,
+    val showRouteDistanceDialog: Boolean = false,
+    val showRouteAdBlueDialog: Boolean = false,
+    val showRouteResultsDialog: Boolean = false,
+    val routeDistanceKm: Int = 20,
+    val routeCalculations: List<RouteCalculation> = emptyList(),
+    val routeError: String? = null
 )
 
 data class PriceTerciles(
@@ -39,4 +49,4 @@ data class FilterState(
 ) {
     val activeCount: Int
         get() = listOf(openNow, myFuelType, onlyFavorites).count { it }
-}
+}

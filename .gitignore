@@ -36,3 +36,10 @@ out/
 # Signing files
 *.jks
 *.keystore
+
+# Secrets / API keys
+.env
+secrets.properties
+*.key
+secret*
+!secret_template.properties

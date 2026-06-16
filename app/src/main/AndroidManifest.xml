@@ -47,10 +47,10 @@
             </intent-filter>
         </activity>
 
-        <!-- Google Maps API Key -->
+        <!-- Google Maps API -->
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="Aqui iria la API KEY por simplicidad" />
+            android:value="${MAPS_API_KEY}" />
 
         <!-- WorkManager Initialization -->
         <provider
@@ -77,4 +77,4 @@
 
     </application>
 
-</manifest>
+</manifest>

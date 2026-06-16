@@ -3,6 +3,9 @@ package com.gas_price_finder.data.local.database
 import android.content.Context
 import com.gas_price_finder.util.AppLogger
 import androidx.room.Room
+import androidx.room.RoomDatabase
+import androidx.sqlite.db.SupportSQLiteDatabase
+import com.gas_price_finder.R
 import com.gas_price_finder.data.local.dao.CcaaDao
 import com.gas_price_finder.data.local.dao.EstacionDao
 import com.gas_price_finder.data.local.dao.EstacionRecienteDao
@@ -53,6 +56,7 @@ object DatabaseModule {
                     GasPriceDatabase::class.java,
                     "gasprice_database"
                 )
+                    .addCallback(createImportCallback(context))
                     .build()
                 INSTANCE = newInstance
                 appLogger.d(TAG, ">>> INSTANCIA CREADA y cacheada")
@@ -95,4 +99,42 @@ object DatabaseModule {
 
     @Provides
     fun provideUsuarioDao(db: GasPriceDatabase): UsuarioDao = db.usuarioDao()
+
+    private fun createImportCallback(context: Context): RoomDatabase.Callback {
+        return object : RoomDatabase.Callback() {
+            override fun onOpen(db: SupportSQLiteDatabase) {
+                super.onOpen(db)
+
+                val prefs = context.getSharedPreferences("db_import_prefs", Context.MODE_PRIVATE)
+                val yaImportado = prefs.getBoolean("historial_importado", false)
+
+                if (!yaImportado) {
+                    importarHistorialDesdeSql(context, db)
+                    prefs.edit().putBoolean("historial_importado", true).apply()
+                }
+            }
+        }
+    }
+
+    private fun importarHistorialDesdeSql(context: Context, db: SupportSQLiteDatabase) {
+        val inputStream = context.resources.openRawResource(R.raw.historial_precios_16062026)
+        val reader = inputStream.bufferedReader()
+
+        db.beginTransaction()
+        try {
+            reader.useLines { lines ->
+                lines.forEach { line ->
+                    val sql = line.trim()
+                    if (sql.isNotEmpty() && !sql.startsWith("--") && !sql.startsWith("/*")) {
+                        db.execSQL(sql)
+                    }
+                }
+            }
+            db.setTransactionSuccessful()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        } finally {
+            db.endTransaction()
+        }
+    }
 }

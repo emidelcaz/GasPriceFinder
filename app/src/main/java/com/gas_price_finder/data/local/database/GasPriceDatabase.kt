@@ -38,3 +38,4 @@ abstract class GasPriceDatabase : RoomDatabase() {
     abstract fun usuarioDao(): UsuarioDao
     abstract fun provinciaDao(): ProvinciaDao
 }
+
